@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="profile-grid">
+  <div class="soft-card profile-card">
+    <h1>Профиль</h1>
+    <p class="muted">{{ current_user.email }}</p>
+    <form id="profileForm" class="form-grid">
+      <label>Имя<input name="name" value="{{ current_user.name }}"></label>
+      <label>Телефон<input name="phone" value="{{ current_user.phone }}"></label>
+      <label class="full">Новый пароль<input name="password" type="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      <button class="primary-button" type="submit">Сохранить</button>
+    </form>
+    <button class="secondary-button" id="logoutBtn">Выйти</button>
+  </div>
+  <div class="soft-card profile-card">
+    <h2>Избранное</h2><div id="favoritesBox" class="mini-list">Загрузка…</div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadFavorites(){
+ const d=await api('/api/products');
+ const f=d.products.filter(p=>p.favorite);
+ document.getElementById('favoritesBox').innerHTML=f.length?f.map(p=>`<div class="mini-row"><span><b>${esc(p.name)}</b><br><small class="muted">${esc(p.brand||'Бренд не указан')} · ${money(p.price)}</small></span><div class="card-actions" style="margin-top:0;max-width:220px"><button class="small-button" onclick="addToCart(${p.id})">В корзину</button><button class="danger-link" onclick="removeFavoriteFromPage(${p.id})">Удалить</button></div></div>`).join(''):'Пока ничего не добавлено.';
+}
+async function removeFavoriteFromPage(id){
+ const d=await api('/api/favorites/'+id,{method:'POST'});
+ if(d.ok) loadFavorites();
+}
+document.getElementById('profileForm').addEventListener('submit',async e=>{e.preventDefault();const r=await api('/api/profile',{method:'POST',body:new FormData(e.target)});if(r.ok) toast('Профиль сохранён');});
+document.getElementById('logoutBtn').addEventListener('click',async()=>{await api('/api/logout',{method:'POST'});location.href='/';}); loadFavorites();
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="cart-layout">
+  <div class="soft-card cart-card"><div class="section-head"><h1>Корзина</h1><span id="cartTotal" class="total-title"></span></div><div id="cartItems"></div></div>
+  <aside class="soft-card checkout-card"><h2>Оформление заявки</h2><form id="orderForm" class="form-grid"><label>Имя<input name="name" value="{{ current_user.name }}"></label><label>Телефон<input name="phone" value="{{ current_user.phone }}" required></label><label>Почта<input name="email" value="{{ current_user.email }}" required></label><label class="full">Комментарий<textarea name="comment" rows="4" placeholder="Удобное время для звонка, доставка и т.п."></textarea></label><button class="primary-button full" type="submit">Создать заявку</button></form><p class="muted">После создания заявки администратор примет её в работу и свяжется с вами.</p></aside>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadCart(){const d=await api('/api/cart');const box=document.getElementById('cartItems');document.getElementById('cartTotal').textContent=money(d.total);box.innerHTML=d.items.length?d.items.map(i=>`<div class="cart-row"><div class="thumb">${i.images?.[0]?`<img src="${i.images[0]}">`:'▦'}</div><div class="cart-info"><b>${esc(i.name)}</b><span>${money(i.price)} × ${i.quantity}</span></div><b>${money(i.subtotal)}</b><button class="danger-link" onclick="removeItem(${i.id})">Удалить</button></div>`).join(''):'<div class="empty-state">Корзина пуста. Найдите товар и добавьте его в корзину.</div>';}
+async function removeItem(id){await api('/api/cart/'+id,{method:'DELETE'});loadCart();}
+document.getElementById('orderForm').addEventListener('submit',async e=>{e.preventDefault();const r=await api('/api/orders',{method:'POST',body:new FormData(e.target)});if(r.ok){toast('Заявка на заказ создана №'+r.order_id);loadCart();} }); loadCart();
+</script>
+{% endblock %}

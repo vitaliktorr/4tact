@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="home-grid">
+  <div class="vin-card dark-card">
+    <div><h1>Поиск по VIN</h1><p class="muted-light">Пока только для вида</p></div>
+    <button class="light-button" type="button" onclick="toast('VIN-поиск пока декоративный')">Самостоятельный подбор</button>
+  </div>
+  <div class="expert-card soft-card">
+    <h2>Подбор за вас</h2>
+    <p>Эксперт поможет сделать выбор</p>
+    <button class="light-button" type="button" onclick="openExpert()">Обратиться к эксперту</button>
+  </div>
+</section>
+
+<section class="catalog-empty soft-card">
+  <h2>Каталог</h2>
+  <p>Каталог пока пуст — товары появляются после добавления администратором.</p>
+</section>
+
+<section class="info-strip">
+  <div><strong>Обычный поиск</strong><span>Работает по названию, бренду, автомобилю и описанию.</span></div>
+  <div><strong>Избранное</strong><span>Сохраняйте интересующие запчасти в личном кабинете.</span></div>
+  <div><strong>Заявка на подбор</strong><span>Эксперт свяжется с вами по телефону и почте.</span></div>
+</section>
+
+<div class="modal-backdrop" id="expertModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('expertModal')">×</button>
+    <h2>Подбор за вас</h2>
+    {% if current_user %}
+      <p class="muted">Оставьте VIN и описание нужной запчасти — администратор увидит заявку.</p>
+      <form id="expertForm" class="form-grid">
+        <label>VIN<input name="vin" required maxlength="32"></label>
+        <label>Искомая запчасть<input name="part" required maxlength="255"></label>
+        <label>Телефон<input name="phone" value="{{ current_user.phone }}" required></label>
+        <label class="full">Комментарий<textarea name="comment" rows="4" placeholder="Например: нужны передние тормозные колодки, желательно оригинал"></textarea></label>
+        <button class="primary-button full" type="submit">Отправить заявку</button>
+      </form>
+    {% else %}
+      <p>Чтобы отправить заявку на подбор, войдите или зарегистрируйтесь.</p>
+      <a class="primary-button inline-button" href="{{ url_for('auth') }}">Войти / зарегистрироваться</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openExpert(){ openModal('expertModal'); }
+{% if current_user %}
+document.getElementById('expertForm')?.addEventListener('submit', async (e)=>{
+  e.preventDefault(); const fd = new FormData(e.target);
+  const r = await api('/api/expert-requests', {method:'POST', body:fd});
+  if(r.ok){ toast('Заявка отправлена. Администратор свяжется с вами.'); closeModal('expertModal'); e.target.reset(); }
+});
+{% endif %}
+</script>
+{% endblock %}

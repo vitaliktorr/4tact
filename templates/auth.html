@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-card soft-card">
+    <div class="auth-tabs"><button class="tab active" data-mode="login">Вход</button><button class="tab" data-mode="register">Регистрация</button></div>
+    <form id="authForm" class="form-grid">
+      <label class="name-field hidden">Имя<input name="name" placeholder="Как к вам обращаться"></label>
+      <label>Почта / логин<input name="email" type="text" required></label>
+      <label>Пароль<input name="password" type="password" required></label>
+      <button class="primary-button" type="submit">Войти</button>
+    </form>
+    <p class="muted">Почта при регистрации пока не подтверждается.</p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+let mode='login';
+const form=document.getElementById('authForm');
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;document.querySelector('.name-field').classList.toggle('hidden',mode==='login');form.querySelector('button').textContent=mode==='login'?'Войти':'Зарегистрироваться';}));
+form.addEventListener('submit', async e=>{e.preventDefault();const fd=new FormData(form);const url=mode==='login'?'/api/login':'/api/register';const r=await api(url,{method:'POST',body:fd});if(r.ok) location.href=r.redirect;});
+</script>
+{% endblock %}

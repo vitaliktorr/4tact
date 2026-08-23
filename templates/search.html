@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="search-layout">
+  <aside class="filters dark-card">
+    <h2>Расширенный поиск</h2>
+    <form id="filterForm">
+      <input name="q" placeholder="Ваш поиск" value="{{ request.args.get('q','') }}">
+      <input name="make" placeholder="Марка" value="{{ request.args.get('make','') }}">
+      <input name="model" placeholder="Модель" value="{{ request.args.get('model','') }}">
+      <input name="part" placeholder="Искомая запчасть" value="{{ request.args.get('part','') }}">
+      <input name="brand" placeholder="Бренд" value="{{ request.args.get('brand','') }}">
+      <button class="light-button full" type="submit">Найти</button>
+    </form>
+    <div class="expert-mini soft-card">
+      <h2>Подбор за вас</h2>
+      <p>Эксперт поможет сделать выбор</p>
+      <button class="light-button" onclick="openExpert()">Обратиться к эксперту</button>
+    </div>
+  </aside>
+
+  <section class="results-panel soft-card">
+    <div class="section-head"><h2>Результаты поиска</h2><span id="resultCount" class="muted"></span></div>
+    <div id="productGrid" class="product-grid"></div>
+    <div id="emptyState" class="empty-state hidden">Ничего не найдено. Попробуйте изменить параметры поиска.</div>
+  </section>
+</section>
+
+<div class="modal-backdrop" id="expertModal"><div class="modal"><button class="modal-close" onclick="closeModal('expertModal')">×</button><h2>Подбор за вас</h2>
+{% if current_user %}
+<form id="expertForm" class="form-grid">
+<label>VIN<input name="vin" required></label><label>Искомая запчасть<input name="part" required></label><label>Телефон<input name="phone" value="{{ current_user.phone }}" required></label><label class="full">Комментарий<textarea name="comment" rows="4"></textarea></label><button class="primary-button full">Отправить заявку</button></form>
+{% else %}<p>Сначала войдите в аккаунт.</p><a class="primary-button inline-button" href="{{ url_for('auth') }}">Войти</a>{% endif %}
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadProducts(){
+  const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+  history.replaceState(null,'','/search?'+params.toString());
+  const data = await api('/api/products?'+params.toString());
+  const grid = document.getElementById('productGrid'); grid.innerHTML='';
+  document.getElementById('resultCount').textContent = data.products.length+' товар(ов)';
+  document.getElementById('emptyState').classList.toggle('hidden', data.products.length>0);
+  data.products.forEach(p=>grid.insertAdjacentHTML('beforeend', productCard(p)));
+}
+document.getElementById('filterForm').addEventListener('submit', e=>{e.preventDefault(); loadProducts();});
+{% if current_user %}
+document.getElementById('expertForm')?.addEventListener('submit', async e=>{e.preventDefault();const r=await api('/api/expert-requests',{method:'POST',body:new FormData(e.target)});if(r.ok){toast('Заявка отправлена');closeModal('expertModal');}});
+{% endif %}
+loadProducts();
+</script>
+{% endblock %}

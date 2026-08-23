@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4tact.ru</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('home') }}">4tact.ru</a>
+      <form class="header-search" action="{{ url_for('search_page') }}" method="get">
+        <input name="q" placeholder="Поиск" value="{{ request.args.get('q','') }}">
+      </form>
+      <div class="header-actions">
+        {% if current_user %}
+          <a class="icon-link" href="{{ url_for('cart') }}" title="Корзина">🛒<span class="badge">{{ cart_count }}</span></a>
+          {% if current_user.is_admin %}<a class="icon-link" href="{{ url_for('admin_panel') }}" title="Админ">⚙</a>{% endif %}
+          <a class="avatar" href="{{ url_for('profile') }}" title="Профиль">{{ (current_user.name[:1] or 'П')|upper }}</a>
+        {% else %}
+          <a class="login-link" href="{{ url_for('auth') }}">Войти</a>
+          <a class="avatar" href="{{ url_for('auth') }}">◯</a>
+        {% endif %}
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer class="footer">
+      <div>
+        <div class="footer-brand">4tact.ru</div>
+      </div>
+      <div>
+        <h4>Клиентам</h4>
+        <a href="#">Доставка</a>
+        <a href="#">Оплата</a>
+        <a href="{{ url_for('profile') if current_user else url_for('auth') }}">Профиль</a>
+      </div>
+      <div>
+        <h4>Каталог</h4>
+        <a href="{{ url_for('search_page') }}">Все запчасти</a>
+        <a href="{{ url_for('search_page') }}?part=ТО">Запчасти для ТО</a>
+        <a href="{{ url_for('search_page') }}?part=АКБ">АКБ/Автопринадлежности</a>
+      </div>
+    </footer>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
